@@ -1,3 +1,4 @@
+
 @model IEnumerable<SchoolApp.Models.Student>
 
 @{
@@ -9,6 +10,13 @@
 <p>
     <a asp-action="Create">Create New</a>
 </p>
+
+@* Live search box *@
+<input type="text"
+       id="searchBox"
+       class="form-control mb-3"
+       placeholder="Live search - Yiohan" />
+
 <table class="table">
     <thead>
         <tr>
@@ -33,33 +41,59 @@
             <th></th>
         </tr>
     </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.StudentNo)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Email)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Phone)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Age)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.BirthDate)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.StudentId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.StudentId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.StudentId">Delete</a>
-            </td>
-        </tr>
-}
+
+    <tbody id="studentRows">
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.StudentNo)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Email)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Phone)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Age)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.BirthDate)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.StudentId">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.StudentId">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.StudentId">Delete</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
+
+@section Scripts {
+    <script>
+        // Runs every time a key is typed in the search box
+        document.getElementById("searchBox").addEventListener("input", function () {
+
+            // What the user typed, in lowercase
+            const text = this.value.toLowerCase();
+
+            // Look at every row in the table
+            document.querySelectorAll("#studentRows tr").forEach(function (row) {
+
+                // Student No. (cell 0), Full Name (cell 1) and Email (cell 2)
+                const rowText = (row.cells[0].textContent + " " +
+                    row.cells[1].textContent + " " +
+                    row.cells[2].textContent).toLowerCase();
+
+                // Show the row if it contains the text
+                // Hide it if it does not match
+                row.style.display = rowText.includes(text) ? "" : "none";
+            });
+        });
+    </script>
+}

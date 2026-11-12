@@ -20,10 +20,31 @@ namespace SchoolApp.Controllers
             _context = context;
         }
 
-        // GET: Students
-        public async Task<IActionResult> Index()
+        // GET: Students?searchString=maria
+        // Search by student name, student number, or email
+        public async Task<IActionResult> Index(string? searchString)
         {
-            return View(await _context.Student.ToListAsync());
+            // Start with all students
+            var students = from s in _context.Student select s;
+
+            // Check if the user entered something
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                // Convert search text to lowercase
+                var text = searchString.ToLower();
+
+                // Search name, student number, or email
+                students = students.Where(s =>
+                    s.Name!.ToLower().Contains(text) ||
+                    s.StudentNo!.ToLower().Contains(text) ||
+                    s.Email!.ToLower().Contains(text));
+            }
+
+            // Keep the search text in the search box
+            ViewData["searchString"] = searchString;
+
+            // Display the search results
+            return View(await students.ToListAsync());
         }
 
         // GET: Students/Details/5
@@ -59,10 +80,9 @@ namespace SchoolApp.Controllers
             Console.WriteLine("Name length: " + (student.Name?.Length ?? 0));
             Console.WriteLine("ModelState valid: " + ModelState.IsValid);
 
-            // Is there already a student with this email?
+            // Check if the email is already registered
             if (await _context.Student.AnyAsync(s => s.Email == student.Email))
             {
-                // Put an error on Email; the student is not saved
                 ModelState.AddModelError("Email", "This email is already registered.");
             }
 
@@ -70,6 +90,7 @@ namespace SchoolApp.Controllers
             {
                 _context.Add(student);
                 await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
 
@@ -104,8 +125,9 @@ namespace SchoolApp.Controllers
                 return NotFound();
             }
 
-            // Same check, but skip the student being edited
-            if (await _context.Student.AnyAsync(s => s.Email == student.Email && s.StudentId != student.StudentId))
+            // Check if another student already uses this email
+            if (await _context.Student.AnyAsync(s =>
+                s.Email == student.Email && s.StudentId != student.StudentId))
             {
                 ModelState.AddModelError("Email", "This email is already registered.");
             }
@@ -171,6 +193,7 @@ namespace SchoolApp.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Check if a student exists
         private bool StudentExists(int id)
         {
             return _context.Student.Any(e => e.StudentId == id);
